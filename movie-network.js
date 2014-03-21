@@ -55,15 +55,6 @@ var zoomCall = undefined;
 // Do the stuff -- to be called after D3.js has loaded
 function D3ok() {
 
-  DEBUG = false;
-
-  // In debug mode, ensure there is a console object (MSIE does not have it by 
-  // default). In non-debug mode, ensure the console log does nothing
-  if( !window.console || !DEBUG ) {
-    window.console = {};
-    window.console.log = function () {};
-  }
-
   // Some constants
   var WIDTH = 960,
       HEIGHT = 600,
@@ -111,7 +102,6 @@ function D3ok() {
   // Get the current size & offset of the browser's viewport window
   function getViewportSize( w ) {
     var w = w || window;
-    console.log(w);
     if( w.innerWidth != null ) 
       return { w: w.innerWidth, 
 	       h: w.innerHeight,
@@ -144,7 +134,6 @@ function D3ok() {
   */
   toggleDiv = function( id, status ) {
     d = d3.select('div#'+id);
-    console.log( 'TOGGLE', id, d.attr('class'), '->', status );
     if( status === undefined )
       status = d.attr('class') == 'panel_on' ? 'off' : 'on';
     d.attr( 'class', 'panel_' + status );
@@ -166,7 +155,6 @@ function D3ok() {
      Parameters: the node data, and the array containing all nodes
   */
   function getMovieInfo( n, nodeArray ) {
-    console.log( "INFO", n );
     info = '<div id="cover">';
     if( n.cover )
       info += '<img class="cover" height="300" src="' + n.cover + '" title="' + n.label + '"/>';
@@ -211,14 +199,11 @@ function D3ok() {
     // Declare the variables pointing to the node & link arrays
     var nodeArray = data.nodes;
     var linkArray = data.links;
-    console.log("NODES:",nodeArray);
-    console.log("LINKS:",linkArray);
 
     minLinkWeight = 
       Math.min.apply( null, linkArray.map( function(n) {return n.weight;} ) );
     maxLinkWeight = 
       Math.max.apply( null, linkArray.map( function(n) {return n.weight;} ) );
-    console.log( "link weight = ["+minLinkWeight+","+maxLinkWeight+"]" );
 
     // Add the node & link arrays to the layout, and start it
     force
@@ -309,33 +294,22 @@ function D3ok() {
       // If we are to activate a movie, and there's already one active,
       // first switch that one off
       if( on && activeMovie !== undefined ) {
-	console.log("..clear: ",activeMovie);
 	highlightGraphNode( nodeArray[activeMovie], false );
-	console.log("..cleared: ",activeMovie);	
       }
 
-      console.log("SHOWNODE "+node.index+" ["+node.label + "]: " + on);
-      console.log(" ..object ["+node + "]: " + on);
       // locate the SVG nodes: circle & label group
       circle = d3.select( '#c' + node.index );
       label  = d3.select( '#l' + node.index );
-      console.log(" ..DOM: ",label);
 
       // activate/deactivate the node itself
-      console.log(" ..box CLASS BEFORE:", label.attr("class"));
-      console.log(" ..circle",circle.attr('id'),"BEFORE:",circle.attr("class"));
       circle
 	.classed( 'main', on );
       label
 	.classed( 'on', on || currentZoom >= SHOW_THRESHOLD );
       label.selectAll('text')
 	.classed( 'main', on );
-      console.log(" ..circle",circle.attr('id'),"AFTER:",circle.attr("class"));
-      console.log(" ..box AFTER:",label.attr("class"));
-      console.log(" ..label=",label);
 
       // activate all siblings
-      console.log(" ..SIBLINGS ["+on+"]: "+node.links);
       Object(node.links).forEach( function(id) {
 	d3.select("#c"+id).classed( 'sibling', on );
 	label = d3.select('#l'+id);
@@ -346,7 +320,6 @@ function D3ok() {
 
       // set the value for the current active movie
       activeMovie = on ? node.index : undefined;
-      console.log("SHOWNODE finished: "+node.index+" = "+on );
     }
 
 
@@ -359,13 +332,10 @@ function D3ok() {
          on the movie
     */
     selectMovie = function( new_idx, doMoveTo ) {
-      console.log("SELECT", new_idx, doMoveTo );
 
       // do we want to center the graph on the node?
       doMoveTo = doMoveTo || false;
       if( doMoveTo ) {
-	console.log("..POS: ", currentOffset.x, currentOffset.y, '->', 
-		    nodeArray[new_idx].x, nodeArray[new_idx].y );
 	s = getViewportSize();
 	width  = s.w<WIDTH ? s.w : WIDTH;
 	height = s.h<HEIGHT ? s.h : HEIGHT;
@@ -399,7 +369,6 @@ function D3ok() {
        Set also the values keeping track of current offset & zoom values
     */
     function repositionGraph( off, z, mode ) {
-      console.log( "REPOS: off="+off, "zoom="+z, "mode="+mode );
 
       // do we want to do a transition?
       var doTr = (mode == 'move');
@@ -450,7 +419,6 @@ function D3ok() {
     /* Perform drag
      */
     function dragmove(d) {
-      console.log("DRAG",d3.event);
       offset = { x : currentOffset.x + d3.event.dx,
 		 y : currentOffset.y + d3.event.dy };
       repositionGraph( offset, undefined, 'drag' );
@@ -465,7 +433,6 @@ function D3ok() {
     function doZoom( increment ) {
       newZoom = increment === undefined ? d3.event.scale 
 					: zoomScale(currentZoom+increment);
-      console.log("ZOOM",currentZoom,"->",newZoom,increment);
       if( currentZoom == newZoom )
 	return;	// no zoom change
 
@@ -484,7 +451,6 @@ function D3ok() {
       zoomRatio = newZoom/currentZoom;
       newOffset = { x : currentOffset.x*zoomRatio + width/2*(1-zoomRatio),
 		    y : currentOffset.y*zoomRatio + height/2*(1-zoomRatio) };
-      console.log("offset",currentOffset,"->",newOffset);
 
       // Reposition the graph
       repositionGraph( newOffset, newZoom, "zoom" );
